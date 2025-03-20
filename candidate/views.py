@@ -35,27 +35,10 @@ class CandidateViewSet(viewsets.ModelViewSet):
         """
         search_query = request.query_params.get("search", None)
         if search_query:
-            search_keywords = search_query.split()
-            combinations = self._get_name_combinations(search_keywords)
-
-            #  We are using postgres full text search here for getting search reponse in relevance:
-            #  Ref:- https://pganalyze.com/blog/full-text-search-django-postgres
-
-            results = Candidate.objects.none()  # Empty result set.
-
-            # Perform a full-text search using PostgreSQL's search functionality
-            for combo in combinations:
-                partial_results = (
-                    Candidate.objects.annotate(
-                        rank=SearchRank(SearchVector("name"), SearchQuery(combo))
-                    )
-                    .filter(rank__gt=0)
-                    .order_by("-rank")
-                    .values_list("name", flat=True)
-                )
-                results |= partial_results
-
-            return Response({"result": results}, status=status.HTTP_200_OK)
+            result = Candidate.objects.annotate(
+                rank=SearchRank("vector_column", SearchQuery(search_query))
+            ).values_list("name", flat=True)
+            return Response({"result": result}, status=status.HTTP_200_OK)
         return Response(
             {"error": "Please provide a search name."},
             status=status.HTTP_400_BAD_REQUEST,
