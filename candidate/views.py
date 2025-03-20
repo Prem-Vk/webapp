@@ -16,19 +16,6 @@ class CandidateViewSet(viewsets.ModelViewSet):
     serializer_class = CandidateSerializer
     http_method_names = ["get", "post", "put", "delete"]
 
-    @staticmethod
-    def _get_name_combinations(search_keywords):
-        """
-        Generate all possible name combinations (including partial matches) from the search keywords.
-        """
-        combinations = []
-        combinations.append(" ".join(search_keywords))
-        if len(search_keywords) > 1:
-            for i in range(len(search_keywords)):
-                partial_name = " ".join(search_keywords[:i] + search_keywords[i + 1 :])
-                combinations.append(partial_name)
-        return combinations
-
     def list(self, request):
         """
         Override the default 'list' method to support search functionality with relevance ranking.
